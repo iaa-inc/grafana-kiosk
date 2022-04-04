@@ -61,12 +61,22 @@ func GrafanaKioskLocal(cfg *Config) {
 	// Give browser time to load next page (this can be prone to failure, explore different options vs sleeping)
 	time.Sleep(2000 * time.Millisecond)
 
+	// This is a dirty hack, beacuse it doesn't 301 to the login page, it just .... fails, in version 8.
 	if err := chromedp.Run(taskCtx,
-		chromedp.Navigate(generatedURL),
+		chromedp.Navigate("https://metrics.ix.asn.au/login"),
 		chromedp.WaitVisible(`//input[@name="user"]`, chromedp.BySearch),
 		chromedp.SendKeys(`//input[@name="user"]`, cfg.Target.Username, chromedp.BySearch),
 		chromedp.SendKeys(`//input[@name="password"]`, cfg.Target.Password+kb.Enter, chromedp.BySearch),
 		chromedp.WaitVisible(`notinputPassword`, chromedp.ByID),
+		chromedp.Navigate(generatedURL),
+	); err != nil {
+		panic(err)
+	}
+
+	time.Sleep(2000 * time.Millisecond)
+
+	if err := chromedp.Run(taskCtx,
+		chromedp.Navigate(generatedURL),
 	); err != nil {
 		panic(err)
 	}
